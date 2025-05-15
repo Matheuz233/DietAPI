@@ -43,12 +43,19 @@ export async function mealsRoutes(app: FastifyInstance) {
 
       const { sessionId } = request.cookies
 
+      const diet = await knex("diets").where("session_id", sessionId)
+
+      const insideDiet = await knex("diets")
+        .where("session_id", sessionId)
+        .andWhere("name", name)
+        .count<{ total: number }[]>("* as total")
+
       await knex("meals").insert({
         id: randomUUID(),
         session_id: sessionId,
         name,
         description,
-        inside_diet: false,
+        inside_diet: Number(insideDiet[0].total) > 0,
       })
 
       return reply.status(201).send()
